@@ -5,7 +5,7 @@ nixPkgs = ["python311", "pip"]
 cmds = ["pip install -r requirements.txt"]
 
 [phases.build]
-cmds = ["echo 'Build complete'"]
+cmds = ["echo 'Build complete'", "ls -la", "python -c 'import sys; print(sys.version)'"]
 
 [start]
 cmd = "python main.py"

@@ -2,25 +2,42 @@ from flask import Flask, jsonify, request
 import os
 import sys
 
+print("=== 应用启动日志 ===")
+print(f"Python版本: {sys.version}")
+print(f"当前工作目录: {os.getcwd()}")
+print(f"PORT环境变量: {os.environ.get('PORT', '未设置')}")
+
+# 列出当前目录文件
+print("当前目录文件:")
+try:
+    for file in os.listdir('.'):
+        print(f"  - {file}")
+except Exception as e:
+    print(f"列出文件失败: {e}")
+
 # 导入游戏逻辑
 try:
     from hardcore_parenting_game import HardcoreParentingGame, GameMode, BabyPersonality
     game_available = True
-    print("成功导入游戏模块")
+    print("✅ 成功导入游戏模块")
 except ImportError as e:
-    print(f"导入游戏模块失败: {e}")
+    print(f"❌ 导入游戏模块失败: {e}")
     game_available = False
-
-print("开始启动应用...")
-print(f"Python版本: {sys.version}")
-print(f"当前工作目录: {os.getcwd()}")
+except Exception as e:
+    print(f"❌ 导入游戏模块时发生未知错误: {e}")
+    game_available = False
 
 app = Flask(__name__)
 
 # 创建游戏实例
 if game_available:
-    game = HardcoreParentingGame()
-    print("游戏实例创建成功")
+    try:
+        game = HardcoreParentingGame()
+        print("✅ 游戏实例创建成功")
+    except Exception as e:
+        print(f"❌ 游戏实例创建失败: {e}")
+        game = None
+        game_available = False
 else:
     game = None
 
