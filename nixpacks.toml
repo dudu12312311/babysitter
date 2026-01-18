@@ -1,11 +1,14 @@
 [phases.setup]
-nixPkgs = ["python311", "pip"]
+nixPkgs = ["python311"]
 
 [phases.install]
 cmds = ["pip install -r requirements.txt"]
 
 [phases.build]
-cmds = ["echo 'Build complete'", "ls -la", "python -c 'import sys; print(sys.version)'"]
+cmds = ["echo 'Build complete'"]
 
 [start]
-cmd = "python main.py"
+cmd = "gunicorn main:app --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 120"
+
+[variables]
+NIXPACKS_NO_MUSL = "1"

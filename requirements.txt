@@ -1,1 +1,3 @@
 Flask==2.3.3
+fal-client
+gunicorn==21.2.0

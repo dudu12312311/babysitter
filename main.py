@@ -2,64 +2,123 @@ from flask import Flask, jsonify, request
 import os
 import sys
 
-print("=== 应用启动日志 ===")
-print(f"Python版本: {sys.version}")
-print(f"当前工作目录: {os.getcwd()}")
-print(f"PORT环境变量: {os.environ.get('PORT', '未设置')}")
-
-# 列出当前目录文件
-print("当前目录文件:")
-try:
-    for file in os.listdir('.'):
-        print(f"  - {file}")
-except Exception as e:
-    print(f"列出文件失败: {e}")
-
 # 导入游戏逻辑
 try:
     from hardcore_parenting_game import HardcoreParentingGame, GameMode, BabyPersonality
     game_available = True
-    print("✅ 成功导入游戏模块")
+    print("成功导入游戏模块")
 except ImportError as e:
-    print(f"❌ 导入游戏模块失败: {e}")
+    print(f"导入游戏模块失败: {e}")
     game_available = False
-except Exception as e:
-    print(f"❌ 导入游戏模块时发生未知错误: {e}")
-    game_available = False
+
+# 导入换尿布任务
+try:
+    from diaper_change_task import diaper_bp
+    diaper_task_available = True
+    print("成功导入换尿布任务模块")
+except ImportError as e:
+    print(f"导入换尿布任务失败: {e}")
+    diaper_task_available = False
+
+print("开始启动应用...")
+print(f"Python版本: {sys.version}")
+print(f"当前工作目录: {os.getcwd()}")
 
 app = Flask(__name__)
 
+# 注册换尿布任务 Blueprint
+if diaper_task_available:
+    app.register_blueprint(diaper_bp)
+    print("换尿布任务已注册")
+
 # 创建游戏实例
 if game_available:
-    try:
-        game = HardcoreParentingGame()
-        print("✅ 游戏实例创建成功")
-    except Exception as e:
-        print(f"❌ 游戏实例创建失败: {e}")
-        game = None
-        game_available = False
+    game = HardcoreParentingGame()
+    print("游戏实例创建成功")
 else:
     game = None
 
 @app.route('/')
 def home():
-    return '''
-    <h1>硬核育儿模拟器</h1>
-    <p>游戏正在运行中...</p>
-    <p>端口: {}</p>
-    <p>状态: 健康</p>
-    <p>游戏模块: {}</p>
-    <br>
-    <h2>API 端点:</h2>
-    <ul>
-        <li><a href="/health">/health</a> - 健康检查</li>
-        <li><a href="/game/status">/game/status</a> - 游戏状态</li>
-        <li>/game/start - 开始游戏 (POST)</li>
-    </ul>
-    '''.format(
-        os.environ.get('PORT', '5000'),
-        "可用" if game_available else "不可用"
-    )
+    diaper_link = '<li><a href="/diaper">🍼 换尿布任务</a> - 互动游戏</li>' if diaper_task_available else ''
+    
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>硬核育儿模拟器</title>
+        <meta charset="utf-8">
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }}
+            .container {{
+                background: white;
+                border-radius: 20px;
+                padding: 40px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            }}
+            h1 {{
+                color: #333;
+                text-align: center;
+            }}
+            .status {{
+                background: #d4edda;
+                color: #155724;
+                padding: 15px;
+                border-radius: 10px;
+                margin: 20px 0;
+                text-align: center;
+            }}
+            ul {{
+                list-style: none;
+                padding: 0;
+            }}
+            li {{
+                margin: 10px 0;
+            }}
+            a {{
+                display: block;
+                padding: 15px;
+                background: #667eea;
+                color: white;
+                text-decoration: none;
+                border-radius: 10px;
+                transition: all 0.3s;
+            }}
+            a:hover {{
+                background: #5568d3;
+                transform: translateX(5px);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🍼 硬核育儿模拟器</h1>
+            <div class="status">
+                <p>✅ 应用运行正常</p>
+                <p>端口: {os.environ.get('PORT', '5000')}</p>
+                <p>游戏模块: {"可用" if game_available else "不可用"}</p>
+                <p>换尿布任务: {"可用" if diaper_task_available else "不可用"}</p>
+            </div>
+            <h2>🎮 游戏任务</h2>
+            <ul>
+                {diaper_link}
+            </ul>
+            <h2>📡 API 端点</h2>
+            <ul>
+                <li><a href="/health">/health</a> - 健康检查</li>
+                <li><a href="/game/status">/game/status</a> - 游戏状态</li>
+            </ul>
+        </div>
+    </body>
+    </html>
+    '''
 
 @app.route('/health')
 def health():
