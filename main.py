@@ -11,7 +11,7 @@ except ImportError as e:
     print(f"导入游戏模块失败: {e}")
     game_available = False
 
-# 导入换尿布任务
+# 导入所有任务模块
 try:
     from diaper_change_task import diaper_bp
     diaper_task_available = True
@@ -20,16 +20,40 @@ except ImportError as e:
     print(f"导入换尿布任务失败: {e}")
     diaper_task_available = False
 
+try:
+    from full_game_interface import game_bp
+    full_game_available = True
+    print("成功导入完整游戏界面")
+except ImportError as e:
+    print(f"导入完整游戏界面失败: {e}")
+    full_game_available = False
+
+try:
+    from feeding_task import feeding_bp
+    feeding_available = True
+    print("成功导入冲奶粉任务")
+except ImportError as e:
+    print(f"导入冲奶粉任务失败: {e}")
+    feeding_available = False
+
 print("开始启动应用...")
 print(f"Python版本: {sys.version}")
 print(f"当前工作目录: {os.getcwd()}")
 
 app = Flask(__name__)
 
-# 注册换尿布任务 Blueprint
+# 注册所有任务 Blueprint
 if diaper_task_available:
     app.register_blueprint(diaper_bp)
     print("换尿布任务已注册")
+
+if full_game_available:
+    app.register_blueprint(game_bp)
+    print("完整游戏界面已注册")
+
+if feeding_available:
+    app.register_blueprint(feeding_bp)
+    print("冲奶粉任务已注册")
 
 # 创建游戏实例
 if game_available:
@@ -40,7 +64,9 @@ else:
 
 @app.route('/')
 def home():
+    game_link = '<li><a href="/game">🎮 完整游戏</a> - 所有任务</li>' if full_game_available else ''
     diaper_link = '<li><a href="/diaper">🍼 换尿布任务</a> - 互动游戏</li>' if diaper_task_available else ''
+    feeding_link = '<li><a href="/game/feeding">🍼 冲奶粉任务</a> - 新任务</li>' if feeding_available else ''
     
     return f'''
     <!DOCTYPE html>
@@ -104,11 +130,13 @@ def home():
                 <p>✅ 应用运行正常</p>
                 <p>端口: {os.environ.get('PORT', '5000')}</p>
                 <p>游戏模块: {"可用" if game_available else "不可用"}</p>
-                <p>换尿布任务: {"可用" if diaper_task_available else "不可用"}</p>
+                <p>完整游戏: {"可用" if full_game_available else "不可用"}</p>
             </div>
             <h2>🎮 游戏任务</h2>
             <ul>
+                {game_link}
                 {diaper_link}
+                {feeding_link}
             </ul>
             <h2>📡 API 端点</h2>
             <ul>
